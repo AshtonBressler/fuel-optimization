@@ -131,8 +131,8 @@ fn main() -> Result<()> {
     simulate(
         &problem,
         initial_state,
-        90.0,
-        0.00010,
+        2000.0,
+        0.010,
         |_, _| 1.0,
         |state, current_time| {
             let data = format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\n",

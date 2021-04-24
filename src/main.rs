@@ -84,6 +84,7 @@ impl RocketState {
     fn GasConstant(&self, problem: &FuelOptimizationProblem) -> f64 {
             UniversalGasConstant/MolarMassExhuast
     }
+    THISISISIS JSUSR  A STRESSSST
 
 
     fn air_density(&self, problem: &FuelOptimizationProblem) -> f64 {

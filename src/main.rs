@@ -72,12 +72,19 @@ impl RocketState {
     }
 
     fn mass_flow_rate(&self, problem: &FuelOptimizationProblem) -> f64 {
-        if self.fuel_mass <= 0.0 {
-            0.0
-        } else {
-            problem.max_flow_rate * self.throttle_opening
-        }
+        let GasConstant = UniversalGasConstant/MolarMassExhuast
+            ThroatArea
+            * TotalPressure
+            * pow(TotalTemp, -1/2)
+            * pow(y, 1/2)
+            * pow(GasConstant, -1/2)
+            * pow((y+1)/2, -(y+1)/(2(y-1)))
     }
+       
+    fn GasConstant(&self, problem: &FuelOptimizationProblem) -> f64 {
+            UniversalGasConstant/MolarMassExhuast
+    }
+
 
     fn air_density(&self, problem: &FuelOptimizationProblem) -> f64 {
         1.46 * E.powf(-0.000134 * self.position)

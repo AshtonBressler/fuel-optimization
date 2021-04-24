@@ -16,7 +16,6 @@ struct FuelOptimizationProblem {
     rocket_mass: f64,
     cross_sectional_area: f64,
     fuel_efficiency: f64,
-    max_flow_rate: f64,
     max_throttle_change_rate: f64, // % / s
     // Velocity -> coefficient
     drag_coefficient: BTreeMap<OrderedFloat<f64>, f64>,
@@ -71,20 +70,62 @@ impl RocketState {
         }
     }
 
+
+
+
+
+
+
     fn mass_flow_rate(&self, problem: &FuelOptimizationProblem) -> f64 {
-        let GasConstant = UniversalGasConstant/MolarMassExhuast
-            ThroatArea
-            * TotalPressure
-            * pow(TotalTemp, -1/2)
-            * pow(y, 1/2)
-            * pow(GasConstant, -1/2)
-            * pow((y+1)/2, -(y+1)/(2(y-1)))
+        let throat_area = PI/4 * self.throat_diameter * self.throat_diameter
+            throat_area
+            * self.total_pressure
+            * pow(self.total_temp, -1/2)
+            * pow(self.specific_heat_ratio, 1/2)
+            * pow(self.gas_constant(problem), -1/2)
+            * pow((self.specific_heat_ratio+1)/2, -(self.specific_heat_ratio+1)/(2(self.specific_heat_ratio-1)))
     }
+
+    fn gas_constant(&self, problem: &FuelOptimizationProblem) -> f64 {
+            self.universal_gas_constant/self.molar_mass_exhuast(problem)       
+    }
+
        
-    fn GasConstant(&self, problem: &FuelOptimizationProblem) -> f64 {
-            UniversalGasConstant/MolarMassExhuast
+    fn molar_mass_exhuast(&self, problem: &FuelOptimizationProblem) -> f64 {
+            
     }
-    THISISISIS JSUSR  A STRESSSST
+
+    fn fuel_mass_flow(&self, problem: &FuelOptimizationProblem) -> f64 {
+            
+    }
+
+    fn oxydizer_mass_flow(&self, problem: &FuelOptimizationProblem) -> f64 {
+            
+    }
+
+    fn fuel_regression(&self, problem: &FuelOptimizationProblem) -> f64 {
+            
+    }
+
+    fn thrust(&self, problem: &FuelOptimizationProblem) -> f64 {
+        let exhust_area = PI/4 * self.exhaust_diamter * self.exhaust_diamter
+        let exit_mach 3.15109=  // All solved by hand for small rocket Ae/A = 6.8458
+        let exhust_temp = self.total_temp * (1 + ((self.specific_heat_ratio-1)/2) * exit_mach * exit_mach)^(-1)) 
+        let exhust_pressure = self.total_pressure * (1 + ((self.specific_heat_ratio-1)/2) * exit_mach * exit_mach)^(- self.specific_heat_ratio / (self.specific_heat_ratio-1)) 
+        let exhust_velocity = exit_mach * pow(self.gas_constant(problem) * exhust_temp * self.specific_heat_ratio, 1/2)
+          self.mass_flow_rate(problem)
+          * exhust_velocity
+          + (exhust_pressure - self.free_stream_pressure(problem))
+          * exhust_area
+    }
+
+    fn free_stream_pressure(&self, problem: &FuelOptimizationProblem) -> f64 {
+        101325pa? // static for test estimate
+    }
+
+
+
+
 
 
     fn air_density(&self, problem: &FuelOptimizationProblem) -> f64 {
@@ -101,9 +142,8 @@ impl RocketState {
 
     fn acceleration(&self, problem: &FuelOptimizationProblem) -> f64 {
         let total_mass = self.fuel_mass + problem.rocket_mass;
-        let thrust = problem.fuel_efficiency * -problem.gravity * self.mass_flow_rate(problem);
         let gravitational_drag = problem.gravity * total_mass;
-        (thrust + gravitational_drag - self.air_drag(problem)) / total_mass
+        (self.thrust + gravitational_drag - self.air_drag(problem)) / total_mass
     }
 }
 
@@ -118,16 +158,21 @@ fn main() -> Result<()> {
     };
     let problem = FuelOptimizationProblem {
         gravity: -9.8,
-        rocket_mass: 50.0,
-        cross_sectional_area: 0.16,
+        rocket_mass: 0.10,
+        cross_sectional_area: 0.050,
         fuel_efficiency: 300.0, // ISP in seconds
-        max_flow_rate: 20.0,
         max_throttle_change_rate: 2.0,
         drag_coefficient: map,
         max_drag_coefficient: 0.3,
+        universal_gas_constant: 8.314462,
+        total_pressure: 437041.5, //idk where I got this but it works
+        throat_diameter: 0.008737, // 0.344 inch
+        exhaust_diamter: 0.02286, // 0.9 inch
+        specific_heat_ratio: 1.26, // estimated specific heat ratio
+        total_temp: 3000,
     };
     let initial_state = RocketState {
-        fuel_mass: 950.0,
+        fuel_mass: 2.0,
         ..RocketState::default()
     };
 
@@ -136,7 +181,7 @@ fn main() -> Result<()> {
     simulate(
         &problem,
         initial_state,
-        90.0,
+        30.0,
         0.010,
         |_, _| 1.0,
         |state, current_time| {

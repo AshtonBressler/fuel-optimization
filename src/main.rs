@@ -1,7 +1,8 @@
 use interpolation::Lerp;
 use ordered_float::OrderedFloat;
 use std::collections::BTreeMap;
-use std::f64::{self, consts::E};
+use std::f64::{self, consts::E}; 
+// use std::f64::consts::PI; // Shleby is this right vs: crate::f64::consts::PI; or std::f32::consts::PI;
 use std::path::Path;
 
 use std::fs;
@@ -76,14 +77,17 @@ impl RocketState {
 
 
 
+
+
+
     fn mass_flow_rate(&self, problem: &FuelOptimizationProblem) -> f64 {
-        let throat_area = PI/4 * self.throat_diameter * self.throat_diameter
+        let throat_area = problem.Pi/4 * problem.throat_diameter * problem.throat_diameter;
             throat_area
-            * self.total_pressure
-            * pow(self.total_temp, -1/2)
-            * pow(self.specific_heat_ratio, 1/2)
-            * pow(self.gas_constant(problem), -1/2)
-            * pow((self.specific_heat_ratio+1)/2, -(self.specific_heat_ratio+1)/(2(self.specific_heat_ratio-1)))
+            * problem.total_pressure
+            * i32::pow(problem.total_temp, -1/2)
+            * i32::pow(problem.specific_heat_ratio, 1/2)
+            * i32::pow(self.gas_constant(problem), -1/2)
+            * i32::pow((problem.specific_heat_ratio + 1)/2, -(problem.specific_heat_ratio+1)/(2(problem.specific_heat_ratio-1)))
     }
 
     fn gas_constant(&self, problem: &FuelOptimizationProblem) -> f64 {
@@ -110,11 +114,11 @@ impl RocketState {
 */
 
     fn thrust(&self, problem: &FuelOptimizationProblem) -> f64 {
-        let exhust_area = PI/4 * self.exhaust_diamter * self.exhaust_diamter
-        let exit_mach 3.15109=  // All solved by hand for small rocket Ae/A = 6.8458
-        let exhust_temp = self.total_temp * (1 + ((self.specific_heat_ratio-1)/2) * exit_mach * exit_mach)^(-1)) 
-        let exhust_pressure = self.total_pressure * (1 + ((self.specific_heat_ratio-1)/2) * exit_mach * exit_mach)^(- self.specific_heat_ratio / (self.specific_heat_ratio-1)) 
-        let exhust_velocity = exit_mach * pow(self.gas_constant(problem) * exhust_temp * self.specific_heat_ratio, 1/2)
+        let exhust_area = problem.Pi/4 * problem.exhaust_diamter * problem.exhaust_diamter;
+        let exit_mach = 3.15109;  // All solved by hand for small rocket Ae/A = 6.8458
+        let exhust_temp = problem.total_temp * (1 + ((problem.specific_heat_ratio-1)/2) * exit_mach * exit_mach)^(-1) ;
+        let exhust_pressure = problem.total_pressure * (1 + ((problem.specific_heat_ratio-1)/2) * exit_mach * exit_mach)^(- problem.specific_heat_ratio / (problem.specific_heat_ratio-1));
+        let exhust_velocity = exit_mach * i32::pow(self.gas_constant(problem) * exhust_temp * problem.specific_heat_ratio, 1/2);
           self.mass_flow_rate(problem)
           * exhust_velocity
           + (exhust_pressure - self.free_stream_pressure(problem))
@@ -124,6 +128,12 @@ impl RocketState {
     fn free_stream_pressure(&self, problem: &FuelOptimizationProblem) -> f64 {
         self.total_pressure * (14.7/2000) // static for test estimate
     }
+
+
+
+
+
+
 
 
 
@@ -144,6 +154,7 @@ impl RocketState {
         let gravitational_drag = problem.gravity * total_mass;
         (self.thrust + gravitational_drag - self.air_drag(problem)) / total_mass
     }
+
 }
 
 fn main() -> Result<()> {
@@ -166,9 +177,10 @@ fn main() -> Result<()> {
         universal_gas_constant: 8.314462,
         total_pressure: 437041.5, //idk where I got this but it works
         throat_diameter: 0.008737, // 0.344 inch
-        exhaust_diamter: 0.02286, // 0.9 inch
+        exhaust_diameter: 0.02286, // 0.9 inch
         specific_heat_ratio: 1.26, // estimated specific heat ratio
         total_temp: 3000,
+        Pi: 3.14159265359, 
     };
     let initial_state = RocketState {
         fuel_mass: 2.0,

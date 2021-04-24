@@ -92,9 +92,10 @@ impl RocketState {
 
        
     fn molar_mass_exhuast(&self, problem: &FuelOptimizationProblem) -> f64 {
-            
+            138/5 // based on guess from C25H52 and NO2
     }
 
+/*
     fn fuel_mass_flow(&self, problem: &FuelOptimizationProblem) -> f64 {
             
     }
@@ -106,6 +107,7 @@ impl RocketState {
     fn fuel_regression(&self, problem: &FuelOptimizationProblem) -> f64 {
             
     }
+*/
 
     fn thrust(&self, problem: &FuelOptimizationProblem) -> f64 {
         let exhust_area = PI/4 * self.exhaust_diamter * self.exhaust_diamter
@@ -120,11 +122,8 @@ impl RocketState {
     }
 
     fn free_stream_pressure(&self, problem: &FuelOptimizationProblem) -> f64 {
-        101325pa? // static for test estimate
+        self.total_pressure * (14.7/2000) // static for test estimate
     }
-
-
-
 
 
 

@@ -141,12 +141,7 @@ impl RocketState {
         let aluminum_oxide_molar_flow = molar_flow_aluminum * 0.5;
         let nitrogen_molar_flow = molar_flow_nitrous/2 ;//0.5 nitrogen mole per nitrous mole
 
-        let exhuast_total_molar_flow = 
-            extra_oxygen_molar_flow
-            + carbon_dioxide_molar_flow
-            + water_molar_flow
-            + aluminum_oxide_molar_flow
-            + nitrogen_molar_flow
+        let exhuast_total_molar_flow = extra_oxygen_molar_flow + carbon_dioxide_molar_flow + water_molar_flow + aluminum_oxide_molar_flow + nitrogen_molar_flow ;
 
         extra_oxygen_molar_flow/exhuast_total_molar_flow * oxygen_molar_mass
         + carbon_dioxide_molar_flow/exhuast_total_molar_flow * carbon_dioxide_molar_mass

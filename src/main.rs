@@ -28,10 +28,8 @@ struct FuelOptimizationProblem {
     total_temp: f64, 
     universal_gas_constant: f64,
 
-
-
-
 }
+
 
 impl FuelOptimizationProblem {
     fn drag_coefficient(&self, velocity: f64) -> f64 {
@@ -83,7 +81,7 @@ impl RocketState {
 
 //////////////////////////////////////////////
 
-    fn mass_flow_rate(&self, problem: &FuelOptimizationProblem) -> f64 {
+    fn total_mass_flow_rate(&self, problem: &FuelOptimizationProblem) -> f64 {
         let throat_area = PI/4.0 * problem.throat_diameter * problem.throat_diameter;
             throat_area
             * problem.total_pressure
@@ -96,29 +94,73 @@ impl RocketState {
     fn gas_constant(&self, problem: &FuelOptimizationProblem) -> f64 {
             problem.universal_gas_constant/self.molar_mass_exhuast(problem)       
     }
-
-       
-    fn molar_mass_exhuast(&self, problem: &FuelOptimizationProblem) -> f64 {
-            138.0/5.0 // based on guess from C25H52 and NO2
-    }
-
-/*
-    fn fuel_mass_flow(&self, problem: &FuelOptimizationProblem) -> f64 {
-            
-    }
+      
 
     fn oxydizer_mass_flow(&self, problem: &FuelOptimizationProblem) -> f64 {
-            
+            self.total_mass_flow_rate(problem) - self.fuel_mass_flow(problem)
     }
 
-    fn fuel_regression(&self, problem: &FuelOptimizationProblem) -> f64 {
-            
+    fn fuel_mass_flow(&self, problem: &FuelOptimizationProblem) -> f64 {
+        let alpha = 0.7; // guess from research
+        let n = 0.75; // guess from research
+        let fuel_bore_area = PI/4.0 * (fuel_bore_diameter+2*fuel_regression)*(fuel_bore_diameter+2*fuel_regression);//mm^2
+        let fuel_regression_rate = alpha * f64::powf((self.oxydizer_mass_flow(problem)/fuel_bore_area), n); //mm/s
+            fuel_density
+            * fuel_height
+            * (fuel_bore_diameter+2*fuel_regression)*PI
+            * fuel_regression_rate
+            * time????
     }
-*/
 
+///////       
+    fn molar_mass_exhuast(&self, problem: &FuelOptimizationProblem) -> f64 {
+            // 138.0/5.0  based on guess from C25H52 and NO2
+
+            // for Nitrox at -80c and a 30% by mass oxygen
+        let nitrous_molar_mass = 44;
+        let oxygen_molar_mass = 32;
+        let molar_flow_nitrous = 0.7*self.oxydizer_mass_flow(problem)/nitrous_molar_mass ; 
+        let molar_flow_oxygen = 0.3*self.oxydizer_mass_flow(problem)/oxygen_molar_mass ;
+        let total_molar_oxygen_flow = molar_flow_oxygen + molar_flow_nitrous ;// one mole of oxygen in one mole of nitrous
+
+            // Al + wax 50/50 by mass (nano aluminum)
+        let wax_molar_mass = 353; // parraffin
+        let aluminum_molar_mass = 27; 
+        let molar_flow_wax =  0.5*self.fuel_mass_flow(problem) / wax_molar_mass;
+        let molar_flow_aluminum =  0.5 * self.fuel_mass_flow(problem)/aluminum_molar_mass;  
+    
+        // combustion output molar masses
+        let carbon_dioxide_molar_mass = 44;
+        let water_molar_mass = 18;
+        let nitrogen_molar_mass = 14;
+        let aluminum_oxide_molar_mass = 102;
+
+        let extra_oxygen_molar_flow = total_molar_oxygen_flow - (molar_flow_wax * 38) - (molar_flow_aluminum * (4/3));
+        let carbon_dioxide_molar_flow = molar_flow_wax * 25;
+        let water_molar_flow = molar_flow_wax * 26;
+        let aluminum_oxide_molar_flow = molar_flow_aluminum * 0.5;
+        let nitrogen_molar_flow = molar_flow_nitrous/2 ;//0.5 nitrogen mole per nitrous mole
+
+        let exhuast_total_molar_flow = 
+            extra_oxygen_molar_flow
+            + carbon_dioxide_molar_flow
+            + water_molar_flow
+            + aluminum_oxide_molar_flow
+            + nitrogen_molar_flow
+
+        extra_oxygen_molar_flow/exhuast_total_molar_flow * oxygen_molar_mass
+        + carbon_dioxide_molar_flow/exhuast_total_molar_flow * carbon_dioxide_molar_mass
+        + water_molar_flow/exhuast_total_molar_flow * water_molar_mass
+        + aluminum_oxide_molar_flow/exhuast_total_molar_flow * aluminum_oxide_molar_mass
+        + nitrogen_molar_flow/exhuast_total_molar_flow * nitrogen_molar_mass
+
+    }
+
+
+///////
     fn thrust(&self, problem: &FuelOptimizationProblem) -> f64 {
         let exhust_area = PI/4.0 * problem.exhaust_diameter * problem.exhaust_diameter;
-        let exit_mach = 3.15109;  // All solved by hand for small rocket Ae/A = 6.8458
+        let exit_mach = 3.15109;  // solved by hand for small rocket test expansion reatio Ae/A = 6.8458
         let exhust_temp = problem.total_temp * f64::powf((1.0 + ((problem.specific_heat_ratio-1.0)/2.0) * exit_mach * exit_mach), -1.0) ;
         let exhust_pressure = problem.total_pressure * f64::powf((1.0 + ((problem.specific_heat_ratio-1.0)/2.0) * exit_mach * exit_mach),(- problem.specific_heat_ratio / (problem.specific_heat_ratio-1.0)));
         let exhust_velocity = exit_mach * (self.gas_constant(problem).sqrt() * exhust_temp * problem.specific_heat_ratio);
@@ -129,7 +171,7 @@ impl RocketState {
     }
 
     fn free_stream_pressure(&self, problem: &FuelOptimizationProblem) -> f64 {
-        problem.total_pressure * (14.7/2000.0) // static for test estimate
+        problem.total_pressure * (14.7/2000.0) // static for test fire 
     }
 
 //////////////////////////////////////////////

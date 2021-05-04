@@ -96,9 +96,9 @@ impl ProblemState {
         self.state.velocity += self.acceleration() * dt;
         self.state.position += self.state.velocity * dt;
 
-        self.state.fuel_mass -= self.fuel_mass_flow(0.0,10.0) * dt;
+        self.state.fuel_mass -= self.fuel_mass_flow(0.01,1.5) * dt;
         self.state.fuel_mass = self.state.fuel_mass.clamp(0.0, f64::MAX);
-   dbg!(self.state.fuel_mass); 
+//dbg!(self.state.fuel_mass); 
 
         self.state.position = self.state.position.clamp(0.0, f64::MAX);
         if self.state.velocity < 0.0 && self.state.position == 0.0 {
@@ -132,7 +132,7 @@ self.testnan();
   //////////////////////////////////////////////
   //////////////////////////////////////////////
 
-    fn total_mass_flow_rate(&self, _min: f64) -> f64 {
+    fn total_mass_flow_rate(&self, _min: f64, _max: f64) -> f64 {
         let throat_area = PI / 4.0 * self.problem.throat_diameter * self.problem.throat_diameter;      
         throat_area * self.problem.total_pressure / self.problem.total_temp.sqrt()
             * self.problem.specific_heat_ratio.sqrt() / (self.gas_constant()).sqrt()
@@ -157,7 +157,7 @@ self.testnan();
             &self.oxydizer_depth,
             1,
             0.1,
-            || self.total_mass_flow_rate(0.1) - self.fuel_mass_flow(0.001,self.total_mass_flow_rate(0.1))
+            || self.total_mass_flow_rate(0.1,2.0) - self.fuel_mass_flow(0.01,self.total_mass_flow_rate(0.1,2.0))
         )
     }
 
@@ -166,7 +166,7 @@ self.testnan();
         let n = 0.75; // guess from research
         (alpha
             * f64::powf(
-                self.oxydizer_mass_flow(0.01,self.total_mass_flow_rate(0.1)) / self.fuel_bore_area(),
+                self.oxydizer_mass_flow(0.01,self.total_mass_flow_rate(0.1,2.0)) / self.fuel_bore_area(),
                 n,
             ))
             / 1000.0 // m/s
@@ -204,15 +204,15 @@ self.testnan();
         // for Nitrox at -80c and a 30% by mass oxygen
         let nitrous_molar_mass = 44.0/1000.0; 
         let oxygen_molar_mass = 32.0/1000.0;
-        let molar_flow_nitrous = 0.7 * self.oxydizer_mass_flow(0.01,self.total_mass_flow_rate(0.1)) / nitrous_molar_mass;
-        let molar_flow_oxygen = 0.3 * self.oxydizer_mass_flow(0.01,self.total_mass_flow_rate(0.1)) / oxygen_molar_mass;
+        let molar_flow_nitrous = 0.7 * self.oxydizer_mass_flow(0.01,self.total_mass_flow_rate(0.1,2.0)) / nitrous_molar_mass;
+        let molar_flow_oxygen = 0.3 * self.oxydizer_mass_flow(0.01,self.total_mass_flow_rate(0.1,2.0)) / oxygen_molar_mass;
         let total_molar_oxygen_flow = molar_flow_oxygen + molar_flow_nitrous; // one mole of oxygen in one mole of nitrous
 
         // Al + wax 50/50 by mass (nano aluminum)
         let wax_molar_mass = 353.0/1000.0; // parraffin
         let aluminum_molar_mass = 27.0/1000.0;
-        let molar_flow_wax = 0.5 * self.fuel_mass_flow(0.001,self.total_mass_flow_rate(0.1)) / wax_molar_mass;
-        let molar_flow_aluminum = 0.5 * self.fuel_mass_flow(0.001,self.total_mass_flow_rate(0.1)) / aluminum_molar_mass;
+        let molar_flow_wax = 0.5 * self.fuel_mass_flow(0.001,self.total_mass_flow_rate(0.1,2.0)) / wax_molar_mass;
+        let molar_flow_aluminum = 0.5 * self.fuel_mass_flow(0.01,self.total_mass_flow_rate(0.1,2.0)) / aluminum_molar_mass;
 
         // combustion output molar masses
         let carbon_dioxide_molar_mass = 44.0/1000.0;
@@ -263,7 +263,7 @@ self.testnan();
 
 // assert!(!exhust_velocity.is_nan());
 
-        self.total_mass_flow_rate(0.1) * exhust_velocity
+        self.total_mass_flow_rate(0.1,2.0) * exhust_velocity
             + (exhust_pressure - self.free_stream_pressure()) * exhust_area
     }
 
@@ -276,7 +276,7 @@ self.testnan();
 //////////////////////////////////////////////
 
     fn testnan(&self) -> f64 {
-    let nantest = self.acceleration();
+    let nantest = self.air_drag();
     dbg!(nantest);  
     // assert!(!nantest.is_nan());
     nantest

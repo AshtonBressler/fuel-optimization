@@ -184,7 +184,7 @@ self.testnan();
             &self.fuel_regression_depth,
             1,
             0.0, // in meters = 0.1mm regressed 
-            || self.fuel_regression_rate(0.0001,0.010) * self.state.total_time
+            || self.fuel_regression_rate(0.00001,0.010) * self.state.total_time
         )
     }
 
@@ -194,7 +194,7 @@ self.testnan();
             * self.problem.fuel_height
             * (self.problem.fuel_bore_diameter + 2.0 * self.fuel_regression_total(0.0,0.03))
             * PI
-            * self.fuel_regression_rate(0.0001,0.010)
+            * self.fuel_regression_rate(0.00001,0.010)
     }
 
     ///////

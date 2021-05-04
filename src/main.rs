@@ -135,19 +135,19 @@ self.testnan();
     fn total_mass_flow_rate(&self, _min: f64, _max: f64) -> f64 {
         let throat_area = PI / 4.0 * self.problem.throat_diameter * self.problem.throat_diameter;      
         throat_area * self.problem.total_pressure / self.problem.total_temp.sqrt()
-            * self.problem.specific_heat_ratio.sqrt() / (self.gas_constant()).sqrt()
+            * self.problem.specific_heat_ratio.sqrt() / (self.gas_constant(10.0,1000.0)).sqrt()
             * f64::powf(
                 (self.problem.specific_heat_ratio + 1.0) / 2.0,
                 -(self.problem.specific_heat_ratio + 1.0) / (2.0 * (self.problem.specific_heat_ratio - 1.0)),
             )       
     }
 
-    fn gas_constant(&self) -> f64 {
+    fn gas_constant(&self, _min: f64, _max: f64) -> f64 {
         recursive_call(
             &self.gas_constant_depth,
             1,
             286.7, // Air to start (J/kg/K)
-            || self.problem.universal_gas_constant / self.molar_mass_exhuast()
+            || self.problem.universal_gas_constant / self.molar_mass_exhuast(14.0/1000.0,120.0/1000.0)
             // for molar mass in g/mole gives KJ/Kg/K
         )
     }
@@ -198,7 +198,7 @@ self.testnan();
     }
 
     ///////
-    fn molar_mass_exhuast(&self) -> f64 {
+    fn molar_mass_exhuast(&self, _min: f64, _max: f64) -> f64 {
         //molar mass in kg/mol for math
 
         // molar flow is mass flow / molar mass (i.e. Kg/s / Kg/mol = )
@@ -265,7 +265,7 @@ dbg!(exhuast_total_molar_flow);
             );          
 
         let exhust_velocity = exit_mach
-            * (self.gas_constant().sqrt() * exhust_temp * self.problem.specific_heat_ratio);
+            * (self.gas_constant(10.0,1000.0).sqrt() * exhust_temp * self.problem.specific_heat_ratio);
 
 // assert!(!exhust_velocity.is_nan());
 

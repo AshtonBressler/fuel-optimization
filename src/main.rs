@@ -19,7 +19,7 @@ struct FuelOptimizationProblem {
     rocket_mass: f64,
     cross_sectional_area: f64,
     // fuel_efficiency: f64,
-    max_throttle_change_rate: f64, // % / s
+    // max_throttle_change_rate: f64, // % / s
     // Velocity -> coefficient
     drag_coefficient: BTreeMap<OrderedFloat<f64>, f64>,
     max_drag_coefficient: f64,
@@ -57,7 +57,7 @@ struct RocketState {
     position: f64,
     velocity: f64,
     fuel_mass: f64,
-    throttle_opening: f64,
+    // throttle_opening: f64,
     total_time: f64,
 }
 
@@ -309,7 +309,7 @@ fn main() -> Result<()> {
         rocket_mass: 0.10,
         cross_sectional_area: 0.050,
         // fuel_efficiency: 300.0, // ISP in seconds
-        max_throttle_change_rate: 2.0,
+        // max_throttle_change_rate: 2.0,
         drag_coefficient: map,
         max_drag_coefficient: 0.3,
         universal_gas_constant: 8.314462, // J/ K / mol

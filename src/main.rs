@@ -166,24 +166,24 @@ self.testnan();
         let n = 0.75; // guess from research
         (alpha
             * f64::powf(
-                self.oxydizer_mass_flow(0.01,self.total_mass_flow_rate(0.1,2.0)) / self.fuel_bore_area(),
+                self.oxydizer_mass_flow(0.01,self.total_mass_flow_rate(0.1,2.0)) / self.fuel_bore_area(0.000177,0.002),
                 n,
             ))
             / 1000.0 // m/s
     }
 
-    fn fuel_bore_area(&self) -> f64 {
+    fn fuel_bore_area(&self, _min: f64, _max: f64) -> f64 {
         PI / 4.0
-            * (self.problem.fuel_bore_diameter + 2.0 * self.fuel_regression_total())
-            * (self.problem.fuel_bore_diameter + 2.0 * self.fuel_regression_total())
+            * (self.problem.fuel_bore_diameter + 2.0 * self.fuel_regression_total(0.0,0.03))
+            * (self.problem.fuel_bore_diameter + 2.0 * self.fuel_regression_total(0.0,0.03))
         //mm^2
     }
 
-    fn fuel_regression_total(&self) -> f64 {
+    fn fuel_regression_total(&self, _min: f64, _max: f64) -> f64 {
         recursive_call(
             &self.fuel_regression_depth,
             1,
-            0.0001, // in meters = 0.1mm regressed 
+            0.0, // in meters = 0.1mm regressed 
             || self.fuel_regression_rate() * self.state.total_time
         )
     }
@@ -192,7 +192,7 @@ self.testnan();
         let fuel_density = (2712.0 + 900.0) / 2.0; // for 50/50 aluminum to wax (kg/m^3)
         fuel_density
             * self.problem.fuel_height
-            * (self.problem.fuel_bore_diameter + 2.0 * self.fuel_regression_total())
+            * (self.problem.fuel_bore_diameter + 2.0 * self.fuel_regression_total(0.0,0.03))
             * PI
             * self.fuel_regression_rate()
     }
@@ -322,7 +322,7 @@ fn main() -> Result<()> {
         fuel_height: 0.200, // Meters
     };
     let initial_state = RocketState {
-        fuel_mass: 2.0,
+        fuel_mass: 0.65,
         ..RocketState::default()
     };
 

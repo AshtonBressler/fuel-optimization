@@ -121,7 +121,7 @@ self.testnan();
         let total_mass = self.state.fuel_mass + self.problem.rocket_mass;
        
         let gravitational_drag = self.problem.gravity * total_mass;
-        (self.thrust() + gravitational_drag - self.air_drag()) / total_mass
+        (self.thrust(0.0,10000.0) + gravitational_drag - self.air_drag()) / total_mass
     }
   
   //////////////////////////////////////////////
@@ -161,7 +161,7 @@ self.testnan();
         )
     }
 
-    fn fuel_regression_rate(&self) -> f64 {
+    fn fuel_regression_rate(&self, _min: f64, _max: f64) -> f64 {
         let alpha = 0.7; // guess from research
         let n = 0.75; // guess from research
         (alpha
@@ -184,7 +184,7 @@ self.testnan();
             &self.fuel_regression_depth,
             1,
             0.0, // in meters = 0.1mm regressed 
-            || self.fuel_regression_rate() * self.state.total_time
+            || self.fuel_regression_rate(0.0001,0.010) * self.state.total_time
         )
     }
 
@@ -194,12 +194,14 @@ self.testnan();
             * self.problem.fuel_height
             * (self.problem.fuel_bore_diameter + 2.0 * self.fuel_regression_total(0.0,0.03))
             * PI
-            * self.fuel_regression_rate()
+            * self.fuel_regression_rate(0.0001,0.010)
     }
 
     ///////
     fn molar_mass_exhuast(&self) -> f64 {
         //molar mass in kg/mol for math
+
+        // molar flow is mass flow / molar mass (i.e. Kg/s / Kg/mol = )
 
         // for Nitrox at -80c and a 30% by mass oxygen
         let nitrous_molar_mass = 44.0/1000.0; 
@@ -214,6 +216,7 @@ self.testnan();
         let molar_flow_wax = 0.5 * self.fuel_mass_flow(0.001,self.total_mass_flow_rate(0.1,2.0)) / wax_molar_mass;
         let molar_flow_aluminum = 0.5 * self.fuel_mass_flow(0.01,self.total_mass_flow_rate(0.1,2.0)) / aluminum_molar_mass;
 
+
         // combustion output molar masses
         let carbon_dioxide_molar_mass = 44.0/1000.0;
         let water_molar_mass = 18.0/1000.0;
@@ -221,7 +224,8 @@ self.testnan();
         let aluminum_oxide_molar_mass = 102.0/1000.0;
 
         let extra_oxygen_molar_flow =
-            total_molar_oxygen_flow - (molar_flow_wax * 38.0) - (molar_flow_aluminum * (4.0 / 3.0));
+            total_molar_oxygen_flow - (molar_flow_wax * 38.0) - (molar_flow_aluminum * (4.0 / 3.0))
+            .clamp(0.0, 1000.0);
         let carbon_dioxide_molar_flow = molar_flow_wax * 25.0;
         let water_molar_flow = molar_flow_wax * 26.0;
         let aluminum_oxide_molar_flow = molar_flow_aluminum * 0.5;
@@ -233,18 +237,20 @@ self.testnan();
             + aluminum_oxide_molar_flow
             + nitrogen_molar_flow;
 
-        extra_oxygen_molar_flow / exhuast_total_molar_flow * oxygen_molar_mass
-            + carbon_dioxide_molar_flow / exhuast_total_molar_flow * carbon_dioxide_molar_mass
-            + water_molar_flow / exhuast_total_molar_flow * water_molar_mass
-            + aluminum_oxide_molar_flow / exhuast_total_molar_flow * aluminum_oxide_molar_mass
-            + nitrogen_molar_flow / exhuast_total_molar_flow * nitrogen_molar_mass
+dbg!(exhuast_total_molar_flow);             
 
-        // 29.0/1000
+        // fraction of flow from each compound/element ... multipled by molar mass
+        (extra_oxygen_molar_flow / exhuast_total_molar_flow) * oxygen_molar_mass
+            + (carbon_dioxide_molar_flow / exhuast_total_molar_flow) * carbon_dioxide_molar_mass
+            + (water_molar_flow / exhuast_total_molar_flow) * water_molar_mass
+            + (aluminum_oxide_molar_flow / exhuast_total_molar_flow) * aluminum_oxide_molar_mass
+            + (nitrogen_molar_flow / exhuast_total_molar_flow) * nitrogen_molar_mass
+
 
     }
 
     ///////
-    fn thrust(&self) -> f64 {
+    fn thrust(&self, _min: f64, _max: f64) -> f64 {
         let exhust_area = PI / 4.0 * self.problem.exhaust_diameter * self.problem.exhaust_diameter;
         let exit_mach = 3.15109; // solved by hand for small rocket test expansion reatio Ae/A = 6.8458
         let exhust_temp = self.problem.total_temp

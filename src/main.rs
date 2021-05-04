@@ -86,12 +86,12 @@ struct ProblemState {
 }
 
 impl ProblemState {
-    fn tick(&mut self, dt: f64, desired_throttle_opening: f64) {
-        let max_throttle_change = self.problem.max_throttle_change_rate * dt;
-        let throttle_opening_delta = (desired_throttle_opening - self.state.throttle_opening)
-            .clamp(-max_throttle_change, max_throttle_change);
-        self.state.throttle_opening += throttle_opening_delta;
-        self.state.total_time += dt;
+    fn tick(&mut self, dt: f64) {
+      //  let max_throttle_change = self.problem.max_throttle_change_rate * dt;
+      //  let throttle_opening_delta = (desired_throttle_opening - self.state.throttle_opening)
+      //       .clamp(-max_throttle_change, max_throttle_change);
+      //  self.state.throttle_opening += throttle_opening_delta;
+      //  self.state.total_time += dt;
 
         self.state.velocity += self.acceleration() * dt;
         self.state.position += self.state.velocity * dt;
@@ -384,7 +384,7 @@ fn simulate(
   
     while dbg!(total_time - current_time) > 0.0 {
         on_step(&problem_state, current_time);
-        problem_state.tick(timestep, desired_throttle(&problem_state));
+        problem_state.tick(timestep);
         current_time += timestep;
     }
 }
